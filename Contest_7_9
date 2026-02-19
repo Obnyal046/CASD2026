@@ -1,0 +1,148 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+public class FastScanner
+{
+    private readonly TextReader reader;
+    private char[] buffer;
+    private int bufferSize, bufferIndex;
+
+    public FastScanner(TextReader reader)
+    {
+        this.reader = reader;
+        buffer = new char[1 << 12];
+        bufferSize = 0;
+        bufferIndex = 0;
+    }
+
+    private void ReadBuffer()
+    {
+        bufferSize = reader.Read(buffer, 0, buffer.Length);
+        bufferIndex = 0;
+        if (bufferSize == 0)
+            buffer[0] = '\0';
+    }
+
+    private char ReadChar()
+    {
+        if (bufferIndex >= bufferSize)
+            ReadBuffer();
+        return buffer[bufferIndex++];
+    }
+
+    public int NextInt()
+    {
+        char c;
+        while ((c = ReadChar()) <= ' ') ;
+
+        bool neg = false;
+        if (c == '-')
+        {
+            neg = true;
+            c = ReadChar();
+        }
+
+        int res = 0;
+        do
+        {
+            res = res * 10 + (c - '0');
+            c = ReadChar();
+        } while (c >= '0' && c <= '9');
+
+        return neg ? -res : res;
+    }
+}
+
+public class MinimalSpanningTree
+{
+    private class Point
+    {
+        public int X { get; }
+        public int Y { get; }
+
+        public Point(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
+    }
+
+    public static void Main()
+    {
+        FastScanner fs = new FastScanner(Console.In);
+        using (var output = new StreamWriter(Console.OpenStandardOutput()))
+        {
+            int n = fs.NextInt();
+            Point[] points = new Point[n];
+
+            for (int i = 0; i < n; i++)
+            {
+                int x = fs.NextInt();
+                int y = fs.NextInt();
+                points[i] = new Point(x, y);
+            }
+
+            if (n == 1)
+            {
+                output.WriteLine("0.0");
+                return;
+            }
+
+            double result = FindMST(points);
+
+            output.WriteLine(result.ToString("F10", System.Globalization.CultureInfo.InvariantCulture));
+        }
+    }
+
+    private static double FindMST(Point[] points)
+    {
+        int n = points.Length;
+        bool[] used = new bool[n];
+        double[] minEdge = new double[n];
+
+        for (int i = 0; i < n; i++)
+        {
+            minEdge[i] = double.MaxValue;
+        }
+
+        minEdge[0] = 0;
+        double totalWeight = 0;
+
+        for (int i = 0; i < n; i++)
+        {
+            int v = -1;
+            for (int j = 0; j < n; j++)
+            {
+                if (!used[j] && (v == -1 || minEdge[j] < minEdge[v]))
+                {
+                    v = j;
+                }
+            }
+
+            used[v] = true;
+            totalWeight += minEdge[v];
+
+            for (int to = 0; to < n; to++)
+            {
+                if (!used[to])
+                {
+                    double dist = Distance(points[v], points[to]);
+                    if (dist < minEdge[to])
+                    {
+                        minEdge[to] = dist;
+                    }
+                }
+            }
+        }
+
+        return totalWeight;
+    }
+
+    private static double Distance(Point a, Point b)
+    {
+        long dx = a.X - b.X;
+        long dy = a.Y - b.Y;
+        return Math.Sqrt(dx * dx + dy * dy);
+    }
+}
