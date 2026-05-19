@@ -5,7 +5,6 @@ using System.Linq;
 
 namespace Task26
 {
-    // Реализация MyHashMap (из задачи 21)
     public class Entry<K, V>
     {
         public K Key { get; set; }
@@ -143,7 +142,6 @@ namespace Task26
         }
     }
 
-    // Реализация MyHashSet (из задачи 25)
     public class MyHashSet<E>
     {
         private MyHashMap<E, object> map;
@@ -167,7 +165,6 @@ namespace Task26
         public List<E> ToList() => map.KeySet();
     }
 
-    // Класс-обёртка для строки с правилом сравнения
     public class ComparableLine : IComparable<ComparableLine>
     {
         public string Original { get; }
