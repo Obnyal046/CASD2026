@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace Task26
 {
+    // Реализация MyHashMap (из задачи 21)
     public class Entry<K, V>
     {
         public K Key { get; set; }
@@ -142,6 +143,7 @@ namespace Task26
         }
     }
 
+    // Реализация MyHashSet (из задачи 25)
     public class MyHashSet<E>
     {
         private MyHashMap<E, object> map;
@@ -152,63 +154,57 @@ namespace Task26
         {
             map = new MyHashMap<E, object>(initialCapacity, loadFactor);
         }
-        public MyHashSet(E[] a) : this()
-        {
-            if (a != null) foreach (var e in a) Add(e);
-        }
         public void Add(E e)
         {
             if (e == null) throw new ArgumentNullException(nameof(e));
             map.Put(e, dummy);
         }
-        public void Clear() => map.Clear();
         public bool Contains(object o)
         {
             if (o is E e) return map.ContainsKey(e);
             return false;
         }
-        public bool IsEmpty() => map.IsEmpty();
-        public bool Remove(object o)
-        {
-            if (o is E e) return map.Remove(e);
-            return false;
-        }
-        public int Size() => map.Size();
         public List<E> ToList() => map.KeySet();
     }
 
-    class CustomString : IComparable<CustomString>
+    // Класс-обёртка для строки с правилом сравнения
+    public class ComparableLine : IComparable<ComparableLine>
     {
-        private string original;
-        private List<int> sortedLengths;
-        public CustomString(string str, List<int> lens)
+        public string Original { get; }
+        private readonly List<int> sortedLengths;
+
+        public ComparableLine(string line)
         {
-            original = str;
-            sortedLengths = lens;
+            Original = line;
+            string[] words = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            sortedLengths = words.Select(w => w.Length).OrderBy(l => l).ToList();
         }
-        public int CompareTo(CustomString other)
+
+        public int CompareTo(ComparableLine other)
         {
             if (other == null) return 1;
-            int minLen = Math.Min(sortedLengths.Count, other.sortedLengths.Count);
-            for (int i = 0; i < minLen; i++)
+            int min = Math.Min(sortedLengths.Count, other.sortedLengths.Count);
+            for (int i = 0; i < min; i++)
             {
                 int cmp = sortedLengths[i].CompareTo(other.sortedLengths[i]);
                 if (cmp != 0) return cmp;
             }
             return sortedLengths.Count.CompareTo(other.sortedLengths.Count);
         }
+
         public override bool Equals(object obj)
         {
-            return CompareTo(obj as CustomString) == 0;
+            return CompareTo(obj as ComparableLine) == 0;
         }
+
         public override int GetHashCode()
         {
             int hash = 17;
-            foreach (int len in sortedLengths)
-                hash = hash * 31 + len;
+            foreach (int len in sortedLengths) hash = hash * 31 + len;
             return hash;
         }
-        public override string ToString() => original;
+
+        public override string ToString() => Original;
     }
 
     class Program
@@ -221,31 +217,23 @@ namespace Task26
                 Console.WriteLine("Файл input.txt не найден.");
                 return;
             }
+
             string[] lines = File.ReadAllLines(filePath);
-            if (lines.Length == 0)
-            {
-                Console.WriteLine("Файл пуст.");
-                return;
-            }
-
-            var set = new MyHashSet<CustomString>();
-
+            MyHashSet<ComparableLine> set = new MyHashSet<ComparableLine>();
             foreach (string line in lines)
             {
                 string trimmed = line.Trim();
                 if (string.IsNullOrWhiteSpace(trimmed)) continue;
-
-                string[] words = trimmed.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                List<int> lengths = new List<int>();
-                foreach (string w in words) lengths.Add(w.Length);
-                lengths.Sort();
-                set.Add(new CustomString(line, lengths));
+                set.Add(new ComparableLine(trimmed));
             }
 
-            Console.WriteLine("Уникальные строки (по правилу сравнения):");
-            foreach (var item in set.ToList())
+            List<ComparableLine> uniqueLines = set.ToList();
+            uniqueLines.Sort();
+
+            Console.WriteLine("Уникальные строки (отсортированные по правилу):");
+            foreach (var item in uniqueLines)
             {
-                Console.WriteLine(item);
+                Console.WriteLine(item.Original);
             }
         }
     }
